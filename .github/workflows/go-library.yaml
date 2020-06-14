@@ -16,12 +16,14 @@ jobs:
           key: ${{ runner.os }}-go-library-${{ hashFiles('go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-library-
+
       - name: Install dependencies
         run: go mod download
+
       - name: Lint
         run: |
-          if [[ -n "$(gofmt -l .)" ]]; then
-            exit 1
-          fi
+          go fmt ./...
+          git diff --exit-code --name-only
+
       - name: Run tests
         run: go test -v ./...

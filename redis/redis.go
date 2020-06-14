@@ -8,37 +8,23 @@ import (
 )
 
 type ClientConfig struct {
-	Host string
+	ConnectionURL string
 }
 
 type Client struct {
-	config *ClientConfig
 	*redis.Pool
 }
 
-func NewClient(host string) (*Client, error) {
-	r := Client{
-		config: &ClientConfig{
-			Host: host,
-		},
-	}
-
-	if err := r.init(); err != nil {
-		return nil, err
-	}
-
-	return &r, nil
-}
-
-func (c *Client) init() error {
+func NewClient(url string) (*Client, error) {
 	pool := &redis.Pool{
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", c.config.Host)
+			return redis.DialURL(url)
 		},
 	}
-	c.Pool = pool
 
-	return nil
+	return &Client{
+		Pool: pool,
+	}, nil
 }
 
 func (c *Client) Transact(ctx context.Context, fn func(redis.Conn) error) error {

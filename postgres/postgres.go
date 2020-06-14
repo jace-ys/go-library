@@ -12,50 +12,23 @@ import (
 )
 
 type ClientConfig struct {
-	Host     string
-	User     string
-	Password string
-	Database string
+	ConnectionURL string
 }
 
 type Client struct {
-	config *ClientConfig
 	*sqlx.DB
 }
 
-func NewClient(host, user, password, database string) (*Client, error) {
-	client := Client{
-		config: &ClientConfig{
-			Host:     host,
-			User:     user,
-			Password: password,
-			Database: database,
-		},
-	}
-
-	if err := client.init(); err != nil {
-		return nil, err
-	}
-
-	return &client, nil
-}
-
-func (c *Client) init() error {
-	connStr := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
-		c.config.User,
-		c.config.Password,
-		c.config.Host,
-		c.config.Database,
-	)
-
-	db, err := sqlx.Open("postgres", connStr)
+func NewClient(url string) (*Client, error) {
+	db, err := sqlx.Open("postgres", url)
 	if err != nil {
-		return fmt.Errorf("postgres connection failed: %w", err)
+		return nil, fmt.Errorf("postgres connection failed: %w", err)
 	}
 	db.MapperFunc(toLowerSnakeCase)
 
-	c.DB = db
-	return nil
+	return &Client{
+		DB: db,
+	}, nil
 }
 
 func toLowerSnakeCase(str string) string {
